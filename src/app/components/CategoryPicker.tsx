@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, ArrowLeft, Check, Tag } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
 import { Button } from './ui/button';
-import { categoryTree, type CategoryNode } from '../lib/data';
+import { categoryTree, getCategoryLabel, type CategoryNode } from '../lib/data';
 
 interface Props {
   value: string;
@@ -16,21 +16,18 @@ export function CategoryPicker({ value, onChange }: Props) {
   const currentNode: CategoryNode | null = stack.length > 0 ? stack[stack.length - 1] : null;
   const currentChildren = currentNode ? currentNode.subcategories ?? [] : categoryTree;
 
-  const currentPath = stack.map(n => n.name).join(' > ');
-
   function handleSelect(node: CategoryNode) {
-    const path = currentPath ? `${currentPath} > ${node.name}` : node.name;
     if (node.subcategories?.length) {
       setStack([...stack, node]);
     } else {
-      onChange(path);
+      onChange(node.id);
       setOpen(false);
       setStack([]);
     }
   }
 
   function handleSelectCurrent() {
-    onChange(currentPath);
+    onChange(currentNode!.id);
     setOpen(false);
     setStack([]);
   }
@@ -41,14 +38,15 @@ export function CategoryPicker({ value, onChange }: Props) {
 
   function handleOpen() {
     // Pre-navigate to the right parent if value is already set
-    if (value && value !== 'Annet') {
-      const parts = value.split(' > ');
+    if (value && value !== 'annet') {
+      const parts = value.split('.');
       if (parts.length > 1) {
-        // find parent nodes
+        // Build ancestor nodes by matching IDs
         const nodes: CategoryNode[] = [];
         let children = categoryTree;
-        for (let i = 0; i < parts.length - 1; i++) {
-          const found = children.find(n => n.name === parts[i]);
+        for (let i = 1; i < parts.length; i++) {
+          const ancestorId = parts.slice(0, i).join('.');
+          const found = children.find(n => n.id === ancestorId);
           if (found) {
             nodes.push(found);
             children = found.subcategories ?? [];
@@ -64,12 +62,7 @@ export function CategoryPicker({ value, onChange }: Props) {
     setOpen(true);
   }
 
-  // Display value: shorten long paths
-  const displayValue = value
-    ? value.split(' > ').length > 1
-      ? `${value.split(' > ')[0]} › ${value.split(' > ').slice(1).join(' › ')}`
-      : value
-    : 'Velg kategori';
+  const displayValue = getCategoryLabel(value) || 'Velg kategori';
 
   return (
     <>
@@ -120,16 +113,15 @@ export function CategoryPicker({ value, onChange }: Props) {
                   <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-sm font-medium">Velg «{currentNode.name}»</span>
                 </div>
-                {value === currentPath && <Check className="h-4 w-4 text-primary" />}
+                {value === currentNode!.id && <Check className="h-4 w-4 text-primary" />}
               </button>
             )}
 
             {currentChildren.map(node => {
-              const nodePath = currentPath ? `${currentPath} > ${node.name}` : node.name;
-              const isSelected = value === nodePath;
+              const isSelected = value === node.id;
               return (
                 <button
-                  key={node.name}
+                  key={node.id}
                   type="button"
                   onClick={() => handleSelect(node)}
                   className={`w-full flex items-center justify-between px-4 py-4 border-b border-border transition-colors ${

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { type Room, type Item } from '../lib/data';
+import { getCategoryLabel, type Room, type Item } from '../lib/data';
 import { supabase } from '../lib/supabase';
 
 export function RoomOverview() {
@@ -87,7 +87,7 @@ export function RoomOverview() {
                 />
                 <div className="p-3">
                   <h4 className="mb-1 truncate">{item.name}</h4>
-                  <p className="text-sm text-muted-foreground truncate">{item.category}</p>
+                  <p className="text-sm text-muted-foreground truncate">{getCategoryLabel(item.category)}</p>
                 </div>
               </Card>
             ))}

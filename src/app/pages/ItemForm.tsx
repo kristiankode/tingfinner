@@ -21,7 +21,7 @@ export function ItemForm() {
 
   const [formData, setFormData] = useState({
     name: aiData?.name || '',
-    category: (aiData?.category ? matchCategory(aiData.category) : 'Annet') as Category,
+    category: (aiData?.category ? matchCategory(aiData.category) : 'annet') as Category,
     estimatedValue: aiData?.estimatedValue?.toString() || '',
     condition: (aiData?.condition || 'God') as Condition,
     room: 'Stue' as Room,

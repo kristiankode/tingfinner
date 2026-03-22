@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Edit2, Trash2, MapPin, Tag, DollarSign, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { supabase } from '../lib/supabase';
-import type { Item } from '../lib/data';
+import { getCategoryLabel, type Item } from '../lib/data';
 
 export function ItemDetail() {
   const navigate = useNavigate();
@@ -129,7 +129,7 @@ export function ItemDetail() {
             <Tag className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div>
               <p className="text-sm text-muted-foreground mb-1">Kategori</p>
-              <p>{item.category}</p>
+              <p>{getCategoryLabel(item.category)}</p>
             </div>
           </div>
 

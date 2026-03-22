@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Search, Camera, X, LogOut } from 'lucide-react';
-import { rooms, type Room, type Item } from '../lib/data';
+import { rooms, getCategoryLabel, type Room, type Item } from '../lib/data';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
@@ -135,7 +135,7 @@ export function Home() {
                 <div className="flex-1 min-w-0">
                   <h3 className="mb-1 truncate">{item.name}</h3>
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{item.category}</p>
+                    <p className="text-sm text-muted-foreground">{getCategoryLabel(item.category)}</p>
                     <p className="text-sm text-muted-foreground">{item.room}</p>
                   </div>
                 </div>

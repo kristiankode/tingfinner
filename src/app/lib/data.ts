@@ -1,131 +1,142 @@
-export type Category = string; // hierarchical path, e.g. "Elektronikk > Mobil og nettbrett"
+export type Category = string; // stable dot-notation slug e.g. "elektronikk.mobil-nettbrett"
 export type Condition = 'Ny' | 'God' | 'Slitt';
 export type Room = 'Stue' | 'Kjøkken' | 'Garasje' | 'Soverom' | 'Bad' | 'Gang' | 'Kontor';
 
 export interface CategoryNode {
-  name: string;
+  id: string;   // stable slug e.g. "elektronikk", "elektronikk.mobil-nettbrett"
+  name: string; // Norwegian display label
   subcategories?: CategoryNode[];
 }
 
 export const categoryTree: CategoryNode[] = [
   {
+    id: 'elektronikk',
     name: 'Elektronikk',
     subcategories: [
-      { name: 'Mobil og nettbrett' },
-      { name: 'TV og lyd' },
-      { name: 'Datamaskiner og tilbehør' },
-      { name: 'Hvitevarer' },
-      { name: 'Foto og kamera' },
-      { name: 'Spillkonsoller og spill' },
-      { name: 'Nettverksutstyr' },
-      { name: 'GPS og navigasjon' },
-      { name: 'Annet elektronikk' },
+      { id: 'elektronikk.mobil-nettbrett', name: 'Mobil og nettbrett' },
+      { id: 'elektronikk.tv-lyd', name: 'TV og lyd' },
+      { id: 'elektronikk.datamaskiner-tilbehor', name: 'Datamaskiner og tilbehør' },
+      { id: 'elektronikk.hvitevarer', name: 'Hvitevarer' },
+      { id: 'elektronikk.foto-kamera', name: 'Foto og kamera' },
+      { id: 'elektronikk.spillkonsoller-spill', name: 'Spillkonsoller og spill' },
+      { id: 'elektronikk.nettverksutstyr', name: 'Nettverksutstyr' },
+      { id: 'elektronikk.gps-navigasjon', name: 'GPS og navigasjon' },
+      { id: 'elektronikk.annet', name: 'Annet elektronikk' },
     ],
   },
   {
+    id: 'mobler-interior',
     name: 'Møbler og interiør',
     subcategories: [
-      { name: 'Sofaer og lengestoler' },
-      { name: 'Stoler og benker' },
-      { name: 'Bord og spisegrupper' },
-      { name: 'Senger og madrasser' },
-      { name: 'Skap og kommoder' },
-      { name: 'Belysning' },
-      { name: 'Tepper og gardiner' },
-      { name: 'Puter og tekstiler' },
-      { name: 'Dekorasjon og kunst' },
-      { name: 'Kjøkkenutstyr og servise' },
-      { name: 'Annet møbler og interiør' },
+      { id: 'mobler-interior.sofaer-lengestoler', name: 'Sofaer og lengestoler' },
+      { id: 'mobler-interior.stoler-benker', name: 'Stoler og benker' },
+      { id: 'mobler-interior.bord-spisegrupper', name: 'Bord og spisegrupper' },
+      { id: 'mobler-interior.senger-madrasser', name: 'Senger og madrasser' },
+      { id: 'mobler-interior.skap-kommoder', name: 'Skap og kommoder' },
+      { id: 'mobler-interior.belysning', name: 'Belysning' },
+      { id: 'mobler-interior.tepper-gardiner', name: 'Tepper og gardiner' },
+      { id: 'mobler-interior.puter-tekstiler', name: 'Puter og tekstiler' },
+      { id: 'mobler-interior.dekorasjon-kunst', name: 'Dekorasjon og kunst' },
+      { id: 'mobler-interior.kjokkenutstyr-servise', name: 'Kjøkkenutstyr og servise' },
+      { id: 'mobler-interior.annet', name: 'Annet møbler og interiør' },
     ],
   },
   {
+    id: 'klaer-sko',
     name: 'Klær og sko',
     subcategories: [
-      { name: 'Herre' },
-      { name: 'Dame' },
-      { name: 'Barn og ungdom' },
-      { name: 'Sko' },
-      { name: 'Vesker og tilbehør' },
-      { name: 'Smykker og klokker' },
-      { name: 'Annet klær og sko' },
+      { id: 'klaer-sko.herre', name: 'Herre' },
+      { id: 'klaer-sko.dame', name: 'Dame' },
+      { id: 'klaer-sko.barn-ungdom', name: 'Barn og ungdom' },
+      { id: 'klaer-sko.sko', name: 'Sko' },
+      { id: 'klaer-sko.vesker-tilbehor', name: 'Vesker og tilbehør' },
+      { id: 'klaer-sko.smykker-klokker', name: 'Smykker og klokker' },
+      { id: 'klaer-sko.annet', name: 'Annet klær og sko' },
     ],
   },
   {
+    id: 'sport-friluft',
     name: 'Sport og friluft',
     subcategories: [
-      { name: 'Sykler og tilbehør' },
-      { name: 'Ski og vintersport' },
-      { name: 'Løp og trening' },
-      { name: 'Racketsport' },
-      { name: 'Camping og friluft' },
-      { name: 'Vannsport' },
-      { name: 'Jakt og fiske' },
-      { name: 'Ridning' },
-      { name: 'Annet sport og friluft' },
+      { id: 'sport-friluft.sykler-tilbehor', name: 'Sykler og tilbehør' },
+      { id: 'sport-friluft.ski-vintersport', name: 'Ski og vintersport' },
+      { id: 'sport-friluft.lop-trening', name: 'Løp og trening' },
+      { id: 'sport-friluft.racketsport', name: 'Racketsport' },
+      { id: 'sport-friluft.camping-friluft', name: 'Camping og friluft' },
+      { id: 'sport-friluft.vannsport', name: 'Vannsport' },
+      { id: 'sport-friluft.jakt-fiske', name: 'Jakt og fiske' },
+      { id: 'sport-friluft.ridning', name: 'Ridning' },
+      { id: 'sport-friluft.annet', name: 'Annet sport og friluft' },
     ],
   },
   {
+    id: 'barneutstyr',
     name: 'Barneutstyr',
     subcategories: [
-      { name: 'Barnevogner og sykler' },
-      { name: 'Bilseter' },
-      { name: 'Leker og spill' },
-      { name: 'Barneklær og -sko' },
-      { name: 'Møbler og utstyr til barn' },
-      { name: 'Annet barneutstyr' },
+      { id: 'barneutstyr.barnevogner-sykler', name: 'Barnevogner og sykler' },
+      { id: 'barneutstyr.bilseter', name: 'Bilseter' },
+      { id: 'barneutstyr.leker-spill', name: 'Leker og spill' },
+      { id: 'barneutstyr.barneklaer-sko', name: 'Barneklær og -sko' },
+      { id: 'barneutstyr.mobler-utstyr', name: 'Møbler og utstyr til barn' },
+      { id: 'barneutstyr.annet', name: 'Annet barneutstyr' },
     ],
   },
   {
+    id: 'boker-musikk-film',
     name: 'Bøker, musikk og film',
     subcategories: [
-      { name: 'Bøker og blader' },
-      { name: 'Musikkinstrumenter' },
-      { name: 'Film og DVD' },
-      { name: 'Musikk (CD og vinyl)' },
-      { name: 'Spill' },
-      { name: 'Annet bøker, musikk og film' },
+      { id: 'boker-musikk-film.boker-blader', name: 'Bøker og blader' },
+      { id: 'boker-musikk-film.musikkinstrumenter', name: 'Musikkinstrumenter' },
+      { id: 'boker-musikk-film.film-dvd', name: 'Film og DVD' },
+      { id: 'boker-musikk-film.musikk-cd-vinyl', name: 'Musikk (CD og vinyl)' },
+      { id: 'boker-musikk-film.spill', name: 'Spill' },
+      { id: 'boker-musikk-film.annet', name: 'Annet bøker, musikk og film' },
     ],
   },
   {
+    id: 'hus-hage',
     name: 'Hus og hage',
     subcategories: [
-      { name: 'Verktøy og maskiner' },
-      { name: 'Hageartikler og utemøbler' },
-      { name: 'Maling og byggevarer' },
-      { name: 'Rørleggerartikler' },
-      { name: 'El-artikler' },
-      { name: 'Annet hus og hage' },
+      { id: 'hus-hage.verktoy-maskiner', name: 'Verktøy og maskiner' },
+      { id: 'hus-hage.hageartikler-utemobler', name: 'Hageartikler og utemøbler' },
+      { id: 'hus-hage.maling-byggevarer', name: 'Maling og byggevarer' },
+      { id: 'hus-hage.rorleggerartikler', name: 'Rørleggerartikler' },
+      { id: 'hus-hage.el-artikler', name: 'El-artikler' },
+      { id: 'hus-hage.annet', name: 'Annet hus og hage' },
     ],
   },
   {
+    id: 'hobby-samleobjekter',
     name: 'Hobby og samleobjekter',
     subcategories: [
-      { name: 'Kunst og antikviteter' },
-      { name: 'Frimerker og mynter' },
-      { name: 'Modeller og samleobjekter' },
-      { name: 'Spill og brettspill' },
-      { name: 'Annet hobby og samleobjekter' },
+      { id: 'hobby-samleobjekter.kunst-antikviteter', name: 'Kunst og antikviteter' },
+      { id: 'hobby-samleobjekter.frimerker-mynter', name: 'Frimerker og mynter' },
+      { id: 'hobby-samleobjekter.modeller-samleobjekter', name: 'Modeller og samleobjekter' },
+      { id: 'hobby-samleobjekter.spill-brettspill', name: 'Spill og brettspill' },
+      { id: 'hobby-samleobjekter.annet', name: 'Annet hobby og samleobjekter' },
     ],
   },
   {
+    id: 'kjaeldyr',
     name: 'Kjæledyr',
     subcategories: [
-      { name: 'Hund' },
-      { name: 'Katt' },
-      { name: 'Fugl' },
-      { name: 'Fisk og akvarium' },
-      { name: 'Gnagere' },
-      { name: 'Annet kjæledyr' },
+      { id: 'kjaeldyr.hund', name: 'Hund' },
+      { id: 'kjaeldyr.katt', name: 'Katt' },
+      { id: 'kjaeldyr.fugl', name: 'Fugl' },
+      { id: 'kjaeldyr.fisk-akvarium', name: 'Fisk og akvarium' },
+      { id: 'kjaeldyr.gnagere', name: 'Gnagere' },
+      { id: 'kjaeldyr.annet', name: 'Annet kjæledyr' },
     ],
   },
   {
+    id: 'mat-drikke',
     name: 'Mat og drikke',
     subcategories: [
-      { name: 'Vin, øl og sprit' },
-      { name: 'Annet mat og drikke' },
+      { id: 'mat-drikke.vin-ol-sprit', name: 'Vin, øl og sprit' },
+      { id: 'mat-drikke.annet', name: 'Annet mat og drikke' },
     ],
   },
-  { name: 'Annet' },
+  { id: 'annet', name: 'Annet' },
 ];
 
 export interface Item {
@@ -146,7 +157,7 @@ export const mockItems: Item[] = [
   {
     id: '1',
     name: 'MacBook Pro',
-    category: 'Elektronikk > Datamaskiner og tilbehør',
+    category: 'elektronikk.datamaskiner-tilbehor',
     room: 'Kontor',
     placement: 'Skrivebord',
     condition: 'God',
@@ -157,7 +168,7 @@ export const mockItems: Item[] = [
   {
     id: '2',
     name: 'Bosch Drill',
-    category: 'Hus og hage > Verktøy og maskiner',
+    category: 'hus-hage.verktoy-maskiner',
     room: 'Garasje',
     placement: 'Verktøybenk, nederste skuff',
     condition: 'God',
@@ -168,7 +179,7 @@ export const mockItems: Item[] = [
   {
     id: '3',
     name: 'Eames Lenestol',
-    category: 'Møbler og interiør > Sofaer og lengestoler',
+    category: 'mobler-interior.sofaer-lengestoler',
     room: 'Stue',
     placement: 'Ved vinduet',
     condition: 'God',
@@ -180,7 +191,7 @@ export const mockItems: Item[] = [
   {
     id: '4',
     name: 'KitchenAid Kjøkkenmaskin',
-    category: 'Møbler og interiør > Kjøkkenutstyr og servise',
+    category: 'mobler-interior.kjokkenutstyr-servise',
     room: 'Kjøkken',
     placement: 'Benkeskap under kaffemaskinen',
     condition: 'Ny',
@@ -191,7 +202,7 @@ export const mockItems: Item[] = [
   {
     id: '5',
     name: 'Barbour Jakke',
-    category: 'Klær og sko > Herre',
+    category: 'klaer-sko.herre',
     room: 'Gang',
     placement: 'Garderobeskap',
     condition: 'God',
@@ -202,7 +213,7 @@ export const mockItems: Item[] = [
   {
     id: '6',
     name: 'Stihl Gressklipper',
-    category: 'Hus og hage > Hageartikler og utemøbler',
+    category: 'hus-hage.hageartikler-utemobler',
     room: 'Garasje',
     placement: 'Høyre vegg',
     condition: 'God',
@@ -215,32 +226,44 @@ export const mockItems: Item[] = [
 export const rooms: Room[] = ['Stue', 'Kjøkken', 'Garasje', 'Soverom', 'Bad', 'Gang', 'Kontor'];
 export const conditions: Condition[] = ['Ny', 'God', 'Slitt'];
 
-/** Flat list of all category paths for matching/display */
-export function flattenCategories(nodes: CategoryNode[] = categoryTree, prefix = ''): string[] {
+export interface FlatCategory { id: string; name: string; label: string; }
+
+/** Flat list of all categories with stable IDs and display labels */
+export function flattenCategories(nodes: CategoryNode[] = categoryTree, labelPrefix = ''): FlatCategory[] {
   return nodes.flatMap(node => {
-    const path = prefix ? `${prefix} > ${node.name}` : node.name;
-    if (node.subcategories?.length) {
-      return [path, ...flattenCategories(node.subcategories, path)];
-    }
-    return [path];
+    const label = labelPrefix ? `${labelPrefix} > ${node.name}` : node.name;
+    const entry: FlatCategory = { id: node.id, name: node.name, label };
+    return node.subcategories?.length
+      ? [entry, ...flattenCategories(node.subcategories, label)]
+      : [entry];
   });
 }
 
-/** Find the best-matching category path for a raw string (e.g. from AI) */
+/** Find the best-matching category ID for a raw string (e.g. from AI) */
 export function matchCategory(raw: string): string {
-  if (!raw) return 'Annet';
+  if (!raw) return 'annet';
   const all = flattenCategories();
   const lower = raw.toLowerCase();
-  // Exact match first
-  const exact = all.find(c => c.toLowerCase() === lower);
-  if (exact) return exact;
-  // Starts-with / contains on leaf name
+  const exact = all.find(c => c.label.toLowerCase() === lower);
+  if (exact) return exact.id;
   const leaf = all.find(c => {
-    const leafName = c.split(' > ').pop()!.toLowerCase();
-    return leafName.includes(lower) || lower.includes(leafName);
+    const l = c.name.toLowerCase();
+    return l.includes(lower) || lower.includes(l);
   });
-  if (leaf) return leaf;
-  // Parent-level contains
-  const parent = all.find(c => c.toLowerCase().includes(lower) || lower.includes(c.toLowerCase()));
-  return parent ?? 'Annet';
+  if (leaf) return leaf.id;
+  return all.find(c => c.label.toLowerCase().includes(lower))?.id ?? 'annet';
+}
+
+/** Lazy index for O(1) ID → label lookups */
+const _byId = new Map<string, FlatCategory>();
+function _index() { if (!_byId.size) flattenCategories().forEach(c => _byId.set(c.id, c)); }
+
+/** Get a display label for a stored category value (ID or legacy path string) */
+export function getCategoryLabel(value: string): string {
+  if (!value) return '';
+  _index();
+  const found = _byId.get(value);
+  if (found) return found.label;
+  // Backward compat: old " > " path strings shown as-is
+  return value;
 }
