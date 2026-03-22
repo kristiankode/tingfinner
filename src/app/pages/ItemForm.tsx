@@ -5,8 +5,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { categories, rooms, conditions, type Category, type Room, type Condition } from '../lib/data';
+import { rooms, conditions, matchCategory, type Category, type Room, type Condition } from '../lib/data';
+import { CategoryPicker } from '../components/CategoryPicker';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,7 +21,7 @@ export function ItemForm() {
 
   const [formData, setFormData] = useState({
     name: aiData?.name || '',
-    category: (aiData?.category || 'Annet') as Category,
+    category: (aiData?.category ? matchCategory(aiData.category) : 'Annet') as Category,
     estimatedValue: aiData?.estimatedValue?.toString() || '',
     condition: (aiData?.condition || 'God') as Condition,
     room: 'Stue' as Room,
@@ -168,22 +168,11 @@ export function ItemForm() {
 
             {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="category">Kategori</Label>
-              <Select
+              <Label>Kategori</Label>
+              <CategoryPicker
                 value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value as Category })}
-              >
-                <SelectTrigger className="bg-input-background rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData({ ...formData, category: value as Category })}
+              />
             </div>
 
             {/* Estimated Value */}
