@@ -9,6 +9,7 @@ import { conditions, matchCategory, locationTypeLabels, type Category, type Room
 import { CategoryPicker } from '../components/CategoryPicker';
 import { RoomPicker } from '../components/RoomPicker';
 import { supabase } from '../lib/supabase';
+import { getSignedUrl, resizeImage } from '../lib/storage';
 import { useAuth } from '../context/AuthContext';
 import { useHousehold } from '../context/HouseholdContext';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet';
@@ -79,10 +80,8 @@ export function ItemForm() {
         setSelectedLocationId(data.location_id);
         if (data.photo) {
           setStoragePath(data.photo);
-          const { data: signed } = await supabase.storage
-            .from('item-photos')
-            .createSignedUrl(data.photo, 3600);
-          setPreviewUrl(signed?.signedUrl || '');
+          const url = await getSignedUrl(data.photo);
+          setPreviewUrl(url || '');
         }
       });
   }, [id]);
@@ -100,20 +99,19 @@ export function ItemForm() {
     let finalPath = storagePath;
 
     if (photoData) {
-      const base64 = photoData.replace(/^data:image\/\w+;base64,/, '');
-      const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-      const path = `${household.id}/${selectedLocationId}/${Date.now()}.jpg`;
+      const blob = await resizeImage(photoData)
+      const path = `${household.id}/${selectedLocationId}/${Date.now()}.webp`
       const { error: uploadError } = await supabase.storage
         .from('item-photos')
-        .upload(path, bytes, { contentType: 'image/jpeg' });
+        .upload(path, blob, { contentType: 'image/webp' })
       if (uploadError) {
-        setSubmitError(`Kunne ikke laste opp bilde: ${uploadError.message}`);
-        return;
+        setSubmitError(`Kunne ikke laste opp bilde: ${uploadError.message}`)
+        return
       }
       if (storagePath) {
-        await supabase.storage.from('item-photos').remove([storagePath]);
+        await supabase.storage.from('item-photos').remove([storagePath])
       }
-      finalPath = path;
+      finalPath = path
     }
 
     const payload = {

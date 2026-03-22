@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { getCategoryLabel, type Item } from '../lib/data';
 import { supabase } from '../lib/supabase';
+import { getSignedUrls } from '../lib/storage';
 
 export function RoomOverview() {
   const navigate = useNavigate();
@@ -28,17 +29,12 @@ export function RoomOverview() {
 
         const paths = mapped.filter(i => i.photo).map(i => i.photo as string);
         if (paths.length > 0) {
-          const { data: signed } = await supabase.storage
-            .from('item-photos')
-            .createSignedUrls(paths, 3600);
-          if (signed) {
-            const urlMap = new Map(signed.map(s => [s.path, s.signedUrl]));
-            setRoomItems(mapped.map(item => ({
-              ...item,
-              photo: item.photo ? (urlMap.get(item.photo) ?? item.photo) : item.photo,
-            })) as Item[]);
-            return;
-          }
+          const urlMap = await getSignedUrls(paths);
+          setRoomItems(mapped.map(item => ({
+            ...item,
+            photo: item.photo ? (urlMap.get(item.photo) ?? null) : null,
+          })) as Item[]);
+          return;
         }
         setRoomItems(mapped as Item[]);
       });

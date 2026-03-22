@@ -8,6 +8,8 @@ import { useHousehold } from '../context/HouseholdContext';
 import { useAuth } from '../context/AuthContext';
 import { locationTypeLabels, type LocationType } from '../lib/data';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet';
+import { supabase } from '../lib/supabase';
+import { getSignedUrl, resizeImage } from '../lib/storage';
 
 const locationIcons: Record<LocationType, React.ElementType> = {
   hus: Home, hytte: TreePine, bat: Anchor, leilighet: Building2, annet: MapPin,
@@ -40,6 +42,10 @@ export function HouseholdSettings() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [migrating, setMigrating] = useState(false);
+  const [migrateProgress, setMigrateProgress] = useState<{ done: number; total: number } | null>(null);
+  const [migrateError, setMigrateError] = useState<string | null>(null);
 
   const isEier = members.find(m => m.userId === session?.user.id)?.role === 'eier';
 
@@ -114,6 +120,52 @@ export function HouseholdSettings() {
   async function handleRemoveMember(userId: string) {
     if (!confirm('Fjern dette medlemmet fra husholdningen?')) return;
     await removeMember(userId);
+  }
+
+  async function handleMigratePhotos() {
+    if (!confirm('Dette konverterer alle eksisterende bilder til WebP. Fortsett?')) return;
+    setMigrating(true);
+    setMigrateProgress(null);
+    setMigrateError(null);
+    try {
+      const { data: items } = await supabase
+        .from('items')
+        .select('id, photo')
+        .not('photo', 'is', null);
+
+      const toMigrate = (items ?? []).filter(i => i.photo && !i.photo.endsWith('.webp'));
+      setMigrateProgress({ done: 0, total: toMigrate.length });
+
+      for (const item of toMigrate) {
+        const signedUrl = await getSignedUrl(item.photo);
+        if (!signedUrl) continue;
+
+        const response = await fetch(signedUrl);
+        const originalBlob = await response.blob();
+        const blobUrl = URL.createObjectURL(originalBlob);
+
+        try {
+          const webpBlob = await resizeImage(blobUrl);
+          const newPath = item.photo.replace(/\.[^.]+$/, '.webp');
+
+          const { error: uploadError } = await supabase.storage
+            .from('item-photos')
+            .upload(newPath, webpBlob, { contentType: 'image/webp', upsert: true });
+          if (uploadError) throw uploadError;
+
+          await supabase.from('items').update({ photo: newPath }).eq('id', item.id);
+          await supabase.storage.from('item-photos').remove([item.photo]);
+        } finally {
+          URL.revokeObjectURL(blobUrl);
+        }
+
+        setMigrateProgress(prev => ({ done: (prev?.done ?? 0) + 1, total: toMigrate.length }));
+      }
+    } catch (err) {
+      setMigrateError((err as Error).message);
+    } finally {
+      setMigrating(false);
+    }
   }
 
   return (
@@ -285,6 +337,29 @@ export function HouseholdSettings() {
             )}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
+          </section>
+        )}
+
+        {/* Photo migration */}
+        {isEier && (
+          <section className="space-y-3 pt-4 border-t border-border">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Vedlikehold</h3>
+            <Button
+              variant="outline"
+              className="w-full rounded-xl"
+              onClick={handleMigratePhotos}
+              disabled={migrating}
+            >
+              {migrating ? 'Konverterer...' : 'Migrer bilder til WebP'}
+            </Button>
+            {migrateProgress && (
+              <p className="text-sm text-center text-muted-foreground">
+                {migrateProgress.done === migrateProgress.total && !migrating
+                  ? `Ferdig — ${migrateProgress.total} bilder konvertert`
+                  : `${migrateProgress.done} av ${migrateProgress.total} konvertert`}
+              </p>
+            )}
+            {migrateError && <p className="text-sm text-destructive text-center">{migrateError}</p>}
           </section>
         )}
 

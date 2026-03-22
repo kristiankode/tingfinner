@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Edit2, Trash2, MapPin, Tag, DollarSign, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { supabase } from '../lib/supabase';
+import { getSignedUrl } from '../lib/storage';
 import { getCategoryLabel, type Item } from '../lib/data';
 
 export function ItemDetail() {
@@ -22,10 +23,7 @@ export function ItemDetail() {
         if (data) {
           let photoUrl = data.photo;
           if (data.photo) {
-            const { data: signed } = await supabase.storage
-              .from('item-photos')
-              .createSignedUrl(data.photo, 3600);
-            photoUrl = signed?.signedUrl ?? data.photo;
+            photoUrl = await getSignedUrl(data.photo) ?? data.photo;
           }
           setItem({
             ...data,
