@@ -1,15 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Camera, X } from 'lucide-react';
-import { mockItems, rooms, type Room } from '../lib/data';
+import { Search, Camera, X, LogOut } from 'lucide-react';
+import { rooms, type Room, type Item } from '../lib/data';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 export function Home() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('items')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(async ({ data }) => {
+        if (!data) return;
+        const mapped = data.map(row => ({
+          ...row,
+          estimatedValue: row.estimated_value,
+          createdAt: new Date(row.created_at),
+        }));
+
+        // Generate signed URLs for all items that have a photo path
+        const paths = mapped.filter(i => i.photo).map(i => i.photo as string);
+        if (paths.length > 0) {
+          const { data: signed } = await supabase.storage
+            .from('item-photos')
+            .createSignedUrls(paths, 3600);
+          if (signed) {
+            const urlMap = new Map(signed.map(s => [s.path, s.signedUrl]));
+            setItems(mapped.map(item => ({
+              ...item,
+              photo: item.photo ? (urlMap.get(item.photo) ?? item.photo) : item.photo,
+            })) as Item[]);
+            return;
+          }
+        }
+        setItems(mapped as Item[]);
+      });
+  }, []);
 
   const toggleRoom = (room: Room) => {
     setSelectedRooms(prev =>
@@ -17,18 +53,28 @@ export function Home() {
     );
   };
 
-  const filteredItems = mockItems.filter(item => {
+  const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRoom = selectedRooms.length === 0 || selectedRooms.includes(item.room);
     return matchesSearch && matchesRoom;
   });
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="px-4 py-6">
-          <h1 className="mb-4">Tingfinner</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1>Tingfinner</h1>
+            <Button onClick={handleSignOut} variant="ghost" size="icon" className="rounded-full">
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
           
           {/* Search Bar */}
           <div className="relative">
@@ -47,7 +93,7 @@ export function Home() {
         <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
           {rooms.map(room => {
             const isSelected = selectedRooms.includes(room);
-            const roomCount = mockItems.filter(item => item.room === room).length;
+            const roomCount = items.filter(item => item.room === room).length;
             return (
               <button
                 key={room}

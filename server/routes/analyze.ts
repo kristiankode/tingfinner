@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { uploadImage } from '../services/storage.js';
+import { uploadImage, deleteImage } from '../services/storage.js';
 import { analyzeImage } from '../services/vision.js';
 
 const router = Router();
@@ -22,6 +22,9 @@ router.post('/', async (req: Request, res: Response) => {
   const aiData = await analyzeImage({ base64, gcsUri });
 
   res.json({ aiData });
+
+  // Fire-and-forget: delete from GCS after analysis (Supabase Storage is the source of truth)
+  deleteImage(filename, userId).catch(err => console.error('GCS cleanup error:', err));
 });
 
 export default router;

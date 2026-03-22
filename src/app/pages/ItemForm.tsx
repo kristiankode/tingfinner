@@ -6,33 +6,109 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { categories, rooms, conditions, mockItems, type Category, type Room, type Condition } from '../lib/data';
+import { categories, rooms, conditions, type Category, type Room, type Condition } from '../lib/data';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 export function ItemForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
-  
-  const photoData = location.state?.photoData;
+  const { session } = useAuth();
+
+  const photoData = location.state?.photoData as string | undefined;
   const aiData = location.state?.aiData;
-  const existingItem = id ? mockItems.find(item => item.id === id) : null;
 
   const [formData, setFormData] = useState({
-    name: aiData?.name || existingItem?.name || '',
-    category: (aiData?.category || existingItem?.category || 'Annet') as Category,
-    estimatedValue: aiData?.estimatedValue?.toString() || existingItem?.estimatedValue?.toString() || '',
-    condition: (aiData?.condition || existingItem?.condition || 'God') as Condition,
-    room: (existingItem?.room || 'Stue') as Room,
-    placement: existingItem?.placement || '',
-    notes: existingItem?.notes || '',
+    name: aiData?.name || '',
+    category: (aiData?.category || 'Annet') as Category,
+    estimatedValue: aiData?.estimatedValue?.toString() || '',
+    condition: (aiData?.condition || 'God') as Condition,
+    room: 'Stue' as Room,
+    placement: '',
+    notes: '',
   });
 
-  const [photo] = useState(photoData || existingItem?.photo || '');
+  // storagePath: the path stored in the DB (e.g. "userId/timestamp.jpg"), null for no photo
+  const [storagePath, setStoragePath] = useState<string | null>(null);
+  // previewUrl: what to show in the <img> tag (base64 for new captures, signed URL for existing)
+  const [previewUrl, setPreviewUrl] = useState(photoData || '');
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(async ({ data }) => {
+        if (!data) return;
+        setFormData({
+          name: data.name,
+          category: data.category as Category,
+          estimatedValue: data.estimated_value?.toString() || '',
+          condition: data.condition as Condition,
+          room: data.room as Room,
+          placement: data.placement,
+          notes: data.notes || '',
+        });
+        if (data.photo) {
+          setStoragePath(data.photo);
+          const { data: signed } = await supabase.storage
+            .from('item-photos')
+            .createSignedUrl(data.photo, 3600);
+          setPreviewUrl(signed?.signedUrl || '');
+        }
+      });
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would save to database
-    console.log('Saving item:', formData);
+    setSubmitError(null);
+    const userId = session?.user.id;
+    if (!userId) return;
+
+    let finalPath = storagePath; // keep existing path unless a new photo is uploaded
+
+    if (photoData) {
+      const base64 = photoData.replace(/^data:image\/\w+;base64,/, '');
+      const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      const path = `${userId}/${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('item-photos')
+        .upload(path, bytes, { contentType: 'image/jpeg' });
+      if (uploadError) {
+        setSubmitError(`Kunne ikke laste opp bilde: ${uploadError.message}`);
+        return;
+      }
+      // Delete old photo if replacing
+      if (storagePath) {
+        await supabase.storage.from('item-photos').remove([storagePath]);
+      }
+      finalPath = path;
+    }
+
+    const payload = {
+      name: formData.name,
+      category: formData.category,
+      room: formData.room,
+      placement: formData.placement,
+      condition: formData.condition,
+      estimated_value: formData.estimatedValue ? Number(formData.estimatedValue) : null,
+      notes: formData.notes || null,
+      photo: finalPath,
+      user_id: userId,
+    };
+
+    if (id) {
+      const { error } = await supabase.from('items').update(payload).eq('id', id);
+      if (error) { setSubmitError(error.message); return; }
+    } else {
+      const { error } = await supabase.from('items').insert(payload);
+      if (error) { setSubmitError(error.message); return; }
+    }
+
     navigate('/');
   };
 
@@ -61,10 +137,10 @@ export function ItemForm() {
 
       <form onSubmit={handleSubmit}>
         {/* Photo */}
-        {photo && (
+        {previewUrl && (
           <div className="p-4">
             <img
-              src={photo}
+              src={previewUrl}
               alt="Item"
               className="w-full h-64 object-cover rounded-xl bg-muted"
             />
@@ -76,7 +152,7 @@ export function ItemForm() {
           {/* AI Pre-filled Section */}
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">Foreslått av AI (kan redigeres)</p>
-            
+
             {/* Item Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Gjenstandsnavn</Label>
@@ -200,6 +276,9 @@ export function ItemForm() {
 
         {/* Action Buttons */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 space-y-2 max-w-[390px] mx-auto">
+          {submitError && (
+            <p className="text-sm text-destructive text-center">{submitError}</p>
+          )}
           <Button type="submit" className="w-full rounded-xl">
             Lagre
           </Button>

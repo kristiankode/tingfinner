@@ -1,14 +1,48 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { mockItems, type Room } from '../lib/data';
+import { type Room, type Item } from '../lib/data';
+import { supabase } from '../lib/supabase';
 
 export function RoomOverview() {
   const navigate = useNavigate();
   const { room } = useParams<{ room: Room }>();
-  
-  const roomItems = mockItems.filter(item => item.room === room);
+  const [roomItems, setRoomItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    if (!room) return;
+    supabase
+      .from('items')
+      .select('*')
+      .eq('room', room)
+      .order('created_at', { ascending: false })
+      .then(async ({ data }) => {
+        if (!data) return;
+        const mapped = data.map(row => ({
+          ...row,
+          estimatedValue: row.estimated_value,
+          createdAt: new Date(row.created_at),
+        }));
+
+        const paths = mapped.filter(i => i.photo).map(i => i.photo as string);
+        if (paths.length > 0) {
+          const { data: signed } = await supabase.storage
+            .from('item-photos')
+            .createSignedUrls(paths, 3600);
+          if (signed) {
+            const urlMap = new Map(signed.map(s => [s.path, s.signedUrl]));
+            setRoomItems(mapped.map(item => ({
+              ...item,
+              photo: item.photo ? (urlMap.get(item.photo) ?? item.photo) : item.photo,
+            })) as Item[]);
+            return;
+          }
+        }
+        setRoomItems(mapped as Item[]);
+      });
+  }, [room]);
 
   return (
     <div className="min-h-screen bg-background pb-24">

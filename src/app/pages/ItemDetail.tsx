@@ -1,13 +1,63 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Edit2, Trash2, MapPin, Tag, DollarSign, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { mockItems } from '../lib/data';
+import { supabase } from '../lib/supabase';
+import type { Item } from '../lib/data';
 
 export function ItemDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  
-  const item = mockItems.find(i => i.id === id);
+  const [item, setItem] = useState<Item | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(async ({ data }) => {
+        if (data) {
+          let photoUrl = data.photo;
+          if (data.photo) {
+            const { data: signed } = await supabase.storage
+              .from('item-photos')
+              .createSignedUrl(data.photo, 3600);
+            photoUrl = signed?.signedUrl ?? data.photo;
+          }
+          setItem({
+            ...data,
+            photo: photoUrl,
+            estimatedValue: data.estimated_value,
+            createdAt: new Date(data.created_at),
+          } as Item);
+        }
+        setLoading(false);
+      });
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!item || !confirm('Er du sikker på at du vil slette denne gjenstanden?')) return;
+
+    // Fetch the raw storage path from DB before deleting
+    const { data } = await supabase.from('items').select('photo').eq('id', id).single();
+    if (data?.photo) {
+      await supabase.storage.from('item-photos').remove([data.photo]);
+    }
+
+    await supabase.from('items').delete().eq('id', id);
+    navigate('/');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Laster...</p>
+      </div>
+    );
+  }
 
   if (!item) {
     return (
@@ -16,13 +66,6 @@ export function ItemDetail() {
       </div>
     );
   }
-
-  const handleDelete = () => {
-    if (confirm('Er du sikker på at du vil slette denne gjenstanden?')) {
-      // In a real app, this would delete from database
-      navigate('/');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -113,10 +156,10 @@ export function ItemDetail() {
             <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div>
               <p className="text-sm text-muted-foreground mb-1">Registrert</p>
-              <p>{item.createdAt.toLocaleDateString('nb-NO', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
+              <p>{item.createdAt.toLocaleDateString('nb-NO', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
               })}</p>
             </div>
           </div>

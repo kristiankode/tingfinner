@@ -13,3 +13,9 @@ export async function uploadImage(buffer: Buffer, filename: string, userId: stri
 
   return `gs://${bucketName}/users/${userId}/${filename}`;
 }
+
+export async function deleteImage(filename: string, userId: string): Promise<void> {
+  const bucket = storage.bucket(bucketName);
+  const file = bucket.file(`users/${userId}/${filename}`);
+  await file.delete({ ignoreNotFound: true });
+}
