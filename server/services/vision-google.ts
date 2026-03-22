@@ -1,7 +1,8 @@
 import vision from '@google-cloud/vision';
 import type { VisionResult } from './vision.js';
 
-const client = new vision.ImageAnnotatorClient();
+const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON!);
+const client = new vision.ImageAnnotatorClient({ credentials });
 
 export async function analyzeImageGoogle(gcsUri: string): Promise<VisionResult> {
   const [result] = await client.annotateImage({

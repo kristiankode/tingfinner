@@ -1,6 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 
-const storage = new Storage();
+const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON!);
+const storage = new Storage({ credentials });
 const bucketName = process.env.GCS_BUCKET_NAME!;
 
 export async function uploadImage(buffer: Buffer, filename: string, userId: string): Promise<string> {
