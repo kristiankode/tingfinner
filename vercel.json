@@ -5,8 +5,7 @@
   "functions": {
     "api/analyze.ts": {
       "maxDuration": 60,
-      "memory": 1024,
-      "bodySizeLimit": "10mb"
+      "memory": 1024
     }
   }
 }
