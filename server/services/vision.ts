@@ -1,5 +1,5 @@
-import { analyzeImageGoogle } from './vision-google.js';
-import { analyzeImageClaude, translateToNorwegian } from './vision-claude.js';
+import { analyzeImageGoogle, detectFromGoogle } from './vision-google.js';
+import { analyzeImageClaude, enrichFromLabels } from './vision-claude.js';
 
 export interface VisionResult {
   name: string;
@@ -14,9 +14,8 @@ export async function analyzeImage(params: { base64: string; gcsUri: string }): 
     return analyzeImageClaude(params.base64);
   }
   if (provider === 'google+claude') {
-    const result = await analyzeImageGoogle(params.gcsUri);
-    result.name = await translateToNorwegian(result.name);
-    return result;
+    const raw = await detectFromGoogle(params.gcsUri);
+    return enrichFromLabels(raw.name, raw.labels);
   }
   return analyzeImageGoogle(params.gcsUri);
 }

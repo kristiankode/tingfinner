@@ -302,6 +302,8 @@ export function flattenCategories(nodes: CategoryNode[] = categoryTree, labelPre
 export function matchCategory(raw: string): string {
   if (!raw) return 'annet';
   const all = flattenCategories();
+  // If it's already a valid category ID, return it directly
+  if (all.some(c => c.id === raw)) return raw;
   const lower = raw.toLowerCase();
   const exact = all.find(c => c.label.toLowerCase() === lower);
   if (exact) return exact.id;

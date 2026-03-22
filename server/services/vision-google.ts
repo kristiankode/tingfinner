@@ -1,10 +1,19 @@
 import vision from '@google-cloud/vision';
 import type { VisionResult } from './vision.js';
 
-const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON!);
-const client = new vision.ImageAnnotatorClient({ credentials });
+const client = new vision.ImageAnnotatorClient();
+
+export interface GoogleVisionRaw {
+  name: string;
+  labels: string[];
+}
 
 export async function analyzeImageGoogle(gcsUri: string): Promise<VisionResult> {
+  const raw = await detectFromGoogle(gcsUri);
+  return { name: raw.name || 'Ukjent', category: 'annet' };
+}
+
+export async function detectFromGoogle(gcsUri: string): Promise<GoogleVisionRaw> {
   const [result] = await client.annotateImage({
     image: { source: { imageUri: gcsUri } },
     features: [
@@ -24,5 +33,5 @@ export async function analyzeImageGoogle(gcsUri: string): Promise<VisionResult> 
   const raw = objects[0] ?? labels[0] ?? '';
   const name = raw.charAt(0).toUpperCase() + raw.slice(1);
 
-  return { name: name || 'Ukjent', category: 'Annet' };
+  return { name, labels: [...objects, ...labels] };
 }

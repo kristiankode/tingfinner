@@ -142,7 +142,7 @@ export function ItemForm() {
 
   const handleDiscard = () => {
     if (confirm('Er du sikker på at du vil forkaste endringene?')) {
-      navigate(-1);
+      navigate('/');
     }
   };
 
