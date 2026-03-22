@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Search, Camera, X, LogOut } from 'lucide-react';
-import { rooms, getCategoryLabel, type Room, type Item } from '../lib/data';
+import { getCategoryLabel, type Item } from '../lib/data';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
@@ -12,7 +12,7 @@ export function Home() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -47,7 +47,9 @@ export function Home() {
       });
   }, []);
 
-  const toggleRoom = (room: Room) => {
+  const roomsInUse = [...new Set(items.map(i => i.room))].sort();
+
+  const toggleRoom = (room: string) => {
     setSelectedRooms(prev =>
       prev.includes(room) ? prev.filter(r => r !== room) : [...prev, room]
     );
@@ -91,7 +93,7 @@ export function Home() {
 
         {/* Room Filter Chips */}
         <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
-          {rooms.map(room => {
+          {roomsInUse.map(room => {
             const isSelected = selectedRooms.includes(room);
             const roomCount = items.filter(item => item.room === room).length;
             return (

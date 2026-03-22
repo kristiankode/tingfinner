@@ -1,6 +1,6 @@
 export type Category = string; // stable dot-notation slug e.g. "elektronikk.mobil-nettbrett"
 export type Condition = 'Ny' | 'God' | 'Slitt';
-export type Room = 'Stue' | 'Kjøkken' | 'Garasje' | 'Soverom' | 'Bad' | 'Gang' | 'Kontor';
+export type Room = string;
 
 export interface CategoryNode {
   id: string;   // stable slug e.g. "elektronikk", "elektronikk.mobil-nettbrett"
@@ -223,7 +223,7 @@ export const mockItems: Item[] = [
   },
 ];
 
-export const rooms: Room[] = ['Stue', 'Kjøkken', 'Garasje', 'Soverom', 'Bad', 'Gang', 'Kontor'];
+export const defaultRooms: string[] = ['Stue', 'Kjøkken', 'Garasje', 'Soverom', 'Bad', 'Gang', 'Kontor'];
 export const conditions: Condition[] = ['Ny', 'God', 'Slitt'];
 
 export interface FlatCategory { id: string; name: string; label: string; }

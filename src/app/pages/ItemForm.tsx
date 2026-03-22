@@ -5,8 +5,9 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { rooms, conditions, matchCategory, type Category, type Room, type Condition } from '../lib/data';
+import { conditions, matchCategory, type Category, type Room, type Condition } from '../lib/data';
 import { CategoryPicker } from '../components/CategoryPicker';
+import { RoomPicker } from '../components/RoomPicker';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -216,22 +217,12 @@ export function ItemForm() {
 
             {/* Room */}
             <div className="space-y-2">
-              <Label htmlFor="room">Rom / Plassering</Label>
-              <Select
+              <Label>Rom / Plassering</Label>
+              <RoomPicker
                 value={formData.room}
-                onValueChange={(value) => setFormData({ ...formData, room: value as Room })}
-              >
-                <SelectTrigger className="bg-input-background rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map(room => (
-                    <SelectItem key={room} value={room}>
-                      {room}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData({ ...formData, room: value as Room })}
+                userId={session?.user.id ?? ''}
+              />
             </div>
 
             {/* Specific Placement */}

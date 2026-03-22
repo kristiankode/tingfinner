@@ -3,12 +3,12 @@ import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { getCategoryLabel, type Room, type Item } from '../lib/data';
+import { getCategoryLabel, type Item } from '../lib/data';
 import { supabase } from '../lib/supabase';
 
 export function RoomOverview() {
   const navigate = useNavigate();
-  const { room } = useParams<{ room: Room }>();
+  const { room } = useParams<{ room: string }>();
   const [roomItems, setRoomItems] = useState<Item[]>([]);
 
   useEffect(() => {
