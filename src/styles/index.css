@@ -1,0 +1,23 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* Mobile viewport optimization */
+@media (min-width: 391px) {
+  body {
+    background: #e5e7eb;
+  }
+}
+
+#root {
+  min-height: 100vh;
+  max-width: 390px;
+  margin: 0 auto;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 390px) {
+  #root {
+    box-shadow: none;
+  }
+}
