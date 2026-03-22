@@ -136,6 +136,16 @@ export const categoryTree: CategoryNode[] = [
       { id: 'mat-drikke.annet', name: 'Annet mat og drikke' },
     ],
   },
+  {
+    id: 'kjoretoy',
+    name: 'Kjøretøy',
+    subcategories: [
+      { id: 'kjoretoy.bil-motorsykkel', name: 'Bil og motorsykkel' },
+      { id: 'kjoretoy.sykler-elsparkesykler', name: 'Sykler og elsparkesykler' },
+      { id: 'kjoretoy.bildeler-tilbehor', name: 'Bildeler og tilbehør' },
+      { id: 'kjoretoy.annet', name: 'Annet kjøretøy' },
+    ],
+  },
   { id: 'annet', name: 'Annet' },
 ];
 
