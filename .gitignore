@@ -4,3 +4,4 @@ dist/
 service-account-key.json
 *.json.key
 /google-account-key.json
+vision-api-key.txt

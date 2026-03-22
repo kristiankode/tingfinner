@@ -5,7 +5,7 @@ import { analyzeImage } from '../services/vision.js';
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
-  const { imageData } = req.body as { imageData?: string };
+  const { imageData, userId = 'anonymous' } = req.body as { imageData?: string; userId?: string };
 
   if (!imageData) {
     res.status(400).json({ error: 'Missing imageData' });
@@ -18,8 +18,8 @@ router.post('/', async (req: Request, res: Response) => {
 
   const filename = `${Date.now()}.jpg`;
 
-  const gcsUri = await uploadImage(buffer, filename);
-  const aiData = await analyzeImage(gcsUri);
+  const gcsUri = await uploadImage(buffer, filename, userId);
+  const aiData = await analyzeImage({ base64, gcsUri });
 
   res.json({ aiData });
 });

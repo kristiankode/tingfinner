@@ -1,24 +1,22 @@
-import vision from '@google-cloud/vision';
-import { mapLabelsToItem, type MappedResult } from '../lib/categoryMapper.js';
+import { analyzeImageGoogle } from './vision-google.js';
+import { analyzeImageClaude, translateToNorwegian } from './vision-claude.js';
 
-const client = new vision.ImageAnnotatorClient();
+export interface VisionResult {
+  name: string;
+  category: string;
+}
 
-export async function analyzeImage(gcsUri: string): Promise<MappedResult> {
-  const [result] = await client.annotateImage({
-    image: { source: { imageUri: gcsUri } },
-    features: [
-      { type: 'LABEL_DETECTION', maxResults: 15 },
-      { type: 'OBJECT_LOCALIZATION', maxResults: 5 },
-    ],
-  });
+// Set VISION_PROVIDER=claude in .env to use Claude, defaults to Google Vision
+const provider = process.env.VISION_PROVIDER ?? 'google';
 
-  const labels = (result.labelAnnotations ?? [])
-    .map((l) => l.description ?? '')
-    .filter(Boolean);
-
-  const objects = (result.localizedObjectAnnotations ?? [])
-    .map((o) => o.name ?? '')
-    .filter(Boolean);
-
-  return mapLabelsToItem(labels, objects);
+export async function analyzeImage(params: { base64: string; gcsUri: string }): Promise<VisionResult> {
+  if (provider === 'claude') {
+    return analyzeImageClaude(params.base64);
+  }
+  if (provider === 'google+claude') {
+    const result = await analyzeImageGoogle(params.gcsUri);
+    result.name = await translateToNorwegian(result.name);
+    return result;
+  }
+  return analyzeImageGoogle(params.gcsUri);
 }
