@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { motion } from 'motion/react';
 import { Loader2 } from 'lucide-react';
@@ -7,25 +7,37 @@ export function Processing() {
   const navigate = useNavigate();
   const location = useLocation();
   const photoData = location.state?.photoData;
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    // Simulate AI processing delay
-    const timer = setTimeout(() => {
-      navigate('/item/new', { 
-        state: { 
-          photoData,
-          // Mock AI-generated data
-          aiData: {
-            name: 'Oppvaskkum',
-            category: 'Kjøkkenutstyr',
-            estimatedValue: 150,
-            condition: 'God',
-          }
-        } 
-      });
-    }, 2500);
+    if (!photoData) return;
 
-    return () => clearTimeout(timer);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    async function analyze() {
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageData: photoData }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+        const { aiData } = await response.json();
+        navigate('/item/new', { state: { photoData, aiData } });
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        // Graceful degradation: open form with no pre-fill
+        navigate('/item/new', { state: { photoData, aiData: null } });
+      }
+    }
+
+    analyze();
+
+    return () => controller.abort();
   }, [navigate, photoData]);
 
   if (!photoData) {
