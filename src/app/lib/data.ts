@@ -1,6 +1,48 @@
 export type Category = string; // stable dot-notation slug e.g. "elektronikk.mobil-nettbrett"
 export type Condition = 'Ny' | 'God' | 'Slitt';
 export type Room = string;
+export type LocationType = 'hus' | 'hytte' | 'bat' | 'leilighet' | 'annet';
+export type MemberRole = 'eier' | 'medlem';
+
+export interface Household {
+  id: string;
+  name: string;
+  createdByUserId: string;
+  createdAt: Date;
+}
+
+export interface Location {
+  id: string;
+  householdId: string;
+  name: string;
+  type: LocationType;
+  createdAt: Date;
+}
+
+export interface HouseholdMember {
+  householdId: string;
+  userId: string;
+  role: MemberRole;
+  joinedAt: Date;
+}
+
+export interface HouseholdInvite {
+  id: string;
+  householdId: string;
+  invitedEmail: string;
+  token: string;
+  createdAt: Date;
+  expiresAt: Date;
+  acceptedAt: Date | null;
+}
+
+export const locationTypeLabels: Record<LocationType, string> = {
+  hus: 'Hus',
+  hytte: 'Hytte',
+  bat: 'Båt',
+  leilighet: 'Leilighet',
+  annet: 'Annet',
+};
 
 export interface CategoryNode {
   id: string;   // stable slug e.g. "elektronikk", "elektronikk.mobil-nettbrett"
@@ -151,6 +193,7 @@ export const categoryTree: CategoryNode[] = [
 
 export interface Item {
   id: string;
+  locationId: string;
   name: string;
   category: Category;
   room: Room;
@@ -166,6 +209,7 @@ export interface Item {
 export const mockItems: Item[] = [
   {
     id: '1',
+    locationId: 'loc-1',
     name: 'MacBook Pro',
     category: 'elektronikk.datamaskiner-tilbehor',
     room: 'Kontor',
@@ -177,6 +221,7 @@ export const mockItems: Item[] = [
   },
   {
     id: '2',
+    locationId: 'loc-1',
     name: 'Bosch Drill',
     category: 'hus-hage.verktoy-maskiner',
     room: 'Garasje',
@@ -188,6 +233,7 @@ export const mockItems: Item[] = [
   },
   {
     id: '3',
+    locationId: 'loc-1',
     name: 'Eames Lenestol',
     category: 'mobler-interior.sofaer-lengestoler',
     room: 'Stue',
@@ -200,6 +246,7 @@ export const mockItems: Item[] = [
   },
   {
     id: '4',
+    locationId: 'loc-1',
     name: 'KitchenAid Kjøkkenmaskin',
     category: 'mobler-interior.kjokkenutstyr-servise',
     room: 'Kjøkken',
@@ -211,6 +258,7 @@ export const mockItems: Item[] = [
   },
   {
     id: '5',
+    locationId: 'loc-1',
     name: 'Barbour Jakke',
     category: 'klaer-sko.herre',
     room: 'Gang',
@@ -222,6 +270,7 @@ export const mockItems: Item[] = [
   },
   {
     id: '6',
+    locationId: 'loc-1',
     name: 'Stihl Gressklipper',
     category: 'hus-hage.hageartikler-utemobler',
     room: 'Garasje',

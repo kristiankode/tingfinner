@@ -9,10 +9,10 @@ import { supabase } from '../lib/supabase';
 interface Props {
   value: string;
   onChange: (value: string) => void;
-  userId: string;
+  locationId: string;
 }
 
-export function RoomPicker({ value, onChange, userId }: Props) {
+export function RoomPicker({ value, onChange, locationId }: Props) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [existingRooms, setExistingRooms] = useState<string[]>([]);
@@ -23,7 +23,7 @@ export function RoomPicker({ value, onChange, userId }: Props) {
     const { data } = await supabase
       .from('items')
       .select('room')
-      .eq('user_id', userId)
+      .eq('location_id', locationId)
       .order('room');
     const fetched = data ? [...new Set(data.map((r: { room: string }) => r.room))].sort() : [];
     setExistingRooms(fetched.length > 0 ? fetched : defaultRooms);

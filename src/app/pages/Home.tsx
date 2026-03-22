@@ -1,51 +1,62 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Camera, X, LogOut } from 'lucide-react';
+import { Search, Camera, X, Settings } from 'lucide-react';
 import { getCategoryLabel, type Item } from '../lib/data';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useHousehold } from '../context/HouseholdContext';
+import { LocationSwitcher } from '../components/LocationSwitcher';
 
 export function Home() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { activeLocationId, household } = useHousehold();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    supabase
+    let query = supabase
       .from('items')
       .select('*')
-      .order('created_at', { ascending: false })
-      .then(async ({ data }) => {
-        if (!data) return;
-        const mapped = data.map(row => ({
-          ...row,
-          estimatedValue: row.estimated_value,
-          createdAt: new Date(row.created_at),
-        }));
+      .order('created_at', { ascending: false });
 
-        // Generate signed URLs for all items that have a photo path
-        const paths = mapped.filter(i => i.photo).map(i => i.photo as string);
-        if (paths.length > 0) {
-          const { data: signed } = await supabase.storage
-            .from('item-photos')
-            .createSignedUrls(paths, 3600);
-          if (signed) {
-            const urlMap = new Map(signed.map(s => [s.path, s.signedUrl]));
-            setItems(mapped.map(item => ({
-              ...item,
-              photo: item.photo ? (urlMap.get(item.photo) ?? item.photo) : item.photo,
-            })) as Item[]);
-            return;
-          }
+    if (activeLocationId) {
+      query = query.eq('location_id', activeLocationId);
+    }
+
+    query.then(async ({ data }) => {
+      if (!data) return;
+      const mapped = data.map(row => ({
+        ...row,
+        locationId: row.location_id,
+        estimatedValue: row.estimated_value,
+        createdAt: new Date(row.created_at),
+      }));
+
+      const paths = mapped.filter(i => i.photo).map(i => i.photo as string);
+      if (paths.length > 0) {
+        const { data: signed } = await supabase.storage
+          .from('item-photos')
+          .createSignedUrls(paths, 3600);
+        if (signed) {
+          const urlMap = new Map(signed.map(s => [s.path, s.signedUrl]));
+          setItems(mapped.map(item => ({
+            ...item,
+            photo: item.photo ? (urlMap.get(item.photo) ?? item.photo) : item.photo,
+          })) as Item[]);
+          return;
         }
-        setItems(mapped as Item[]);
-      });
-  }, []);
+      }
+      setItems(mapped as Item[]);
+    });
+  }, [activeLocationId]);
+
+  // Reset room filter when location changes
+  useEffect(() => {
+    setSelectedRooms([]);
+  }, [activeLocationId]);
 
   const roomsInUse = [...new Set(items.map(i => i.room))].sort();
 
@@ -61,23 +72,21 @@ export function Home() {
     return matchesSearch && matchesRoom;
   });
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1>Tingfinner</h1>
-            <Button onClick={handleSignOut} variant="ghost" size="icon" className="rounded-full">
-              <LogOut className="h-5 w-5" />
-            </Button>
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="truncate max-w-[140px]">{household?.name ?? 'Tingfinner'}</h1>
+            <div className="flex items-center gap-2">
+              <LocationSwitcher />
+              <Button onClick={() => navigate('/husholdning')} variant="ghost" size="icon" className="rounded-full shrink-0">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          
+
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -92,27 +101,29 @@ export function Home() {
         </div>
 
         {/* Room Filter Chips */}
-        <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
-          {roomsInUse.map(room => {
-            const isSelected = selectedRooms.includes(room);
-            const roomCount = items.filter(item => item.room === room).length;
-            return (
-              <button
-                key={room}
-                onClick={() => toggleRoom(room)}
-                onDoubleClick={() => navigate(`/room/${room}`)}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  isSelected
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-muted'
-                }`}
-              >
-                {room} ({roomCount})
-                {isSelected && <X className="inline-block ml-1 h-3 w-3" />}
-              </button>
-            );
-          })}
-        </div>
+        {roomsInUse.length > 0 && (
+          <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
+            {roomsInUse.map(room => {
+              const isSelected = selectedRooms.includes(room);
+              const roomCount = items.filter(item => item.room === room).length;
+              return (
+                <button
+                  key={room}
+                  onClick={() => toggleRoom(room)}
+                  onDoubleClick={() => navigate(`/room/${room}`)}
+                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                    isSelected
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-muted'
+                  }`}
+                >
+                  {room} ({roomCount})
+                  {isSelected && <X className="inline-block ml-1 h-3 w-3" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Item List */}
@@ -157,13 +168,8 @@ export function Home() {
       </Button>
 
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
